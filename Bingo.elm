@@ -33,7 +33,8 @@ entryItem phrase points =
 entryList =
   ul [  ]
     [ entryItem "Future-Proof" 100,
-      entryItem "Doing Agile" 2
+      entryItem "Doing Agile" 2,
+      entryItem "Using Grunt" 50
     ]
 
 

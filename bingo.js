@@ -305,9 +305,10 @@ Elm.Bingo.make = function (_elm) {
    _L.fromArray([A2(entryItem,
                 "Future-Proof",
                 100)
+                ,A2(entryItem,"Doing Agile",2)
                 ,A2(entryItem,
-                "Doing Agile",
-                2)]));
+                "Using Grunt",
+                50)]));
    var pageFooter = A2($Html.footer,
    _L.fromArray([]),
    _L.fromArray([A2($Html.a,
