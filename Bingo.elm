@@ -4,6 +4,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import String exposing (toUpper, repeat, trimRight)
+import StartApp
 
 
 newEntry phrase points id =
@@ -14,13 +15,33 @@ newEntry phrase points id =
   }
 
 
+-- MODEL
+
 initialModel =
   { entries =
       [ newEntry "Doing Agile" 200 2,
         newEntry "In the Cloud" 300 3,
-        newEntry "Future Proof" 100 1
+        newEntry "Future Proof" 100 1,
+        newEntry "Rock-Star Ninja" 400 4
       ]
   }
+
+-- UPDATE
+
+type Action
+  = NoOp
+  | Sort
+
+update action model =
+  case action of
+    NoOp ->
+      model
+      
+    Sort ->
+      { model | entries <- List.sortBy .points model.entries }
+
+
+-- VIEW
 
 title message times =
   message ++ " "
@@ -50,15 +71,27 @@ entryItem entry =
 entryList entries =
   ul [  ] ( List.map entryItem entries )
 
--- View --
-view model =
+
+view address model =
   div [ id "container"  ]
         [
          pageHeader,
-         entryList model.entries,          
+         entryList model.entries,
+         button
+           [ class "sort", onClick address Sort ]
+           [ text "Sort" ],
          pageFooter
         ]
 
 
 main =
-  view initialModel
+  --  view ( update Sort initialModel )
+  -- initialModel
+  --   |> update Sort
+  --   |> view
+
+  StartApp.start
+  { model = initialModel,
+    view = view,
+    update = update
+  }
