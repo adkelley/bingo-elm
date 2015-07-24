@@ -291,22 +291,34 @@ Elm.Bingo.make = function (_elm) {
    $Signal = Elm.Signal.make(_elm),
    $StartApp = Elm.StartApp.make(_elm),
    $String = Elm.String.make(_elm);
-   var entryItem = function (entry) {
+   var totalItem = function (total) {
       return A2($Html.li,
-      _L.fromArray([]),
+      _L.fromArray([$Html$Attributes.$class("total")]),
       _L.fromArray([A2($Html.span,
-                   _L.fromArray([$Html$Attributes.$class("phrase")]),
-                   _L.fromArray([$Html.text(entry.phrase)]))
+                   _L.fromArray([$Html$Attributes.$class("label")]),
+                   _L.fromArray([$Html.text("Total")]))
                    ,A2($Html.span,
                    _L.fromArray([$Html$Attributes.$class("points")]),
-                   _L.fromArray([$Html.text($Basics.toString(entry.points))]))]));
+                   _L.fromArray([$Html.text($Basics.toString(total))]))]));
    };
-   var entryList = function (entries) {
-      return A2($Html.ul,
-      _L.fromArray([]),
-      A2($List.map,
-      entryItem,
-      entries));
+   var totalPoints = function (entries) {
+      return function () {
+         var spokenEntries = A2($List.filter,
+         function (_) {
+            return _.wasSpoken;
+         },
+         entries);
+         return A3($List.foldl,
+         F2(function (x,y) {
+            return x + y;
+         }),
+         0,
+         A2($List.map,
+         function (_) {
+            return _.points;
+         },
+         spokenEntries));
+      }();
    };
    var pageFooter = A2($Html.footer,
    _L.fromArray([]),
@@ -328,7 +340,33 @@ Elm.Bingo.make = function (_elm) {
    model) {
       return function () {
          switch (action.ctor)
-         {case "NoOp": return model;
+         {case "Delete":
+            return function () {
+                 var remainingEntries = A2($List.filter,
+                 function (e) {
+                    return !_U.eq(e.id,
+                    action._0);
+                 },
+                 model.entries);
+                 return _U.replace([["entries"
+                                    ,remainingEntries]],
+                 model);
+              }();
+            case "Mark":
+            return function () {
+                 var updateEntry = function (e) {
+                    return _U.eq(e.id,
+                    action._0) ? _U.replace([["wasSpoken"
+                                             ,$Basics.not(e.wasSpoken)]],
+                    e) : e;
+                 };
+                 return _U.replace([["entries"
+                                    ,A2($List.map,
+                                    updateEntry,
+                                    model.entries)]],
+                 model);
+              }();
+            case "NoOp": return model;
             case "Sort":
             return _U.replace([["entries"
                                ,A2($List.sortBy,
@@ -338,7 +376,50 @@ Elm.Bingo.make = function (_elm) {
                                model.entries)]],
               model);}
          _U.badCase($moduleName,
-         "between lines 36 and 41");
+         "between lines 57 and 75");
+      }();
+   });
+   var Mark = function (a) {
+      return {ctor: "Mark",_0: a};
+   };
+   var Delete = function (a) {
+      return {ctor: "Delete"
+             ,_0: a};
+   };
+   var entryItem = F2(function (address,
+   entry) {
+      return A2($Html.li,
+      _L.fromArray([$Html$Attributes.classList(_L.fromArray([{ctor: "_Tuple2"
+                                                             ,_0: "highlight"
+                                                             ,_1: entry.wasSpoken}]))
+                   ,A2($Html$Events.onClick,
+                   address,
+                   Mark(entry.id))]),
+      _L.fromArray([A2($Html.span,
+                   _L.fromArray([$Html$Attributes.$class("phrase")]),
+                   _L.fromArray([$Html.text(entry.phrase)]))
+                   ,A2($Html.span,
+                   _L.fromArray([$Html$Attributes.$class("points")]),
+                   _L.fromArray([$Html.text($Basics.toString(entry.points))]))
+                   ,A2($Html.button,
+                   _L.fromArray([$Html$Attributes.$class("delete")
+                                ,A2($Html$Events.onClick,
+                                address,
+                                Delete(entry.id))]),
+                   _L.fromArray([]))]));
+   });
+   var entryList = F2(function (address,
+   entries) {
+      return function () {
+         var entryItems = A2($List.map,
+         entryItem(address),
+         entries);
+         var items = A2($Basics._op["++"],
+         entryItems,
+         _L.fromArray([totalItem(totalPoints(entries))]));
+         return A2($Html.ul,
+         _L.fromArray([]),
+         items);
       }();
    });
    var Sort = {ctor: "Sort"};
@@ -347,7 +428,9 @@ Elm.Bingo.make = function (_elm) {
       return A2($Html.div,
       _L.fromArray([$Html$Attributes.id("container")]),
       _L.fromArray([pageHeader
-                   ,entryList(model.entries)
+                   ,A2(entryList,
+                   address,
+                   model.entries)
                    ,A2($Html.button,
                    _L.fromArray([$Html$Attributes.$class("sort")
                                 ,A2($Html$Events.onClick,
@@ -387,15 +470,34 @@ Elm.Bingo.make = function (_elm) {
                               ,model: initialModel
                               ,update: update
                               ,view: view});
+   var Model = function (a) {
+      return {_: {},entries: a};
+   };
+   var Entry = F4(function (a,
+   b,
+   c,
+   d) {
+      return {_: {}
+             ,id: d
+             ,phrase: a
+             ,points: b
+             ,wasSpoken: c};
+   });
    _elm.Bingo.values = {_op: _op
+                       ,Entry: Entry
+                       ,Model: Model
                        ,newEntry: newEntry
                        ,initialModel: initialModel
                        ,NoOp: NoOp
                        ,Sort: Sort
+                       ,Delete: Delete
+                       ,Mark: Mark
                        ,update: update
                        ,title: title
                        ,pageHeader: pageHeader
                        ,pageFooter: pageFooter
+                       ,totalPoints: totalPoints
+                       ,totalItem: totalItem
                        ,entryItem: entryItem
                        ,entryList: entryList
                        ,view: view
